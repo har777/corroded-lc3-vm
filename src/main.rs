@@ -28,10 +28,10 @@ fn main() {
             Opcode::BR => {},
             Opcode::ADD => {
                 let raw_dr = (instruction >> 9) & 0x7;
-                let dr = Register::from_u16(raw_dr).unwrap();
                 let raw_sr1 = (instruction >> 6) & 0x7;
-                let sr1 = Register::from_u16(raw_sr1).unwrap();
                 let imm_flag = (instruction >> 5) & 0x1;
+                let dr = Register::from_u16(raw_dr).unwrap();
+                let sr1 = Register::from_u16(raw_sr1).unwrap();
 
                 match imm_flag {
                     1 => {
@@ -57,10 +57,10 @@ fn main() {
             Opcode::JSR => {},
             Opcode::AND => {
                 let raw_dr = (instruction >> 9) & 0x7;
-                let dr = Register::from_u16(raw_dr).unwrap();
                 let raw_sr1 = (instruction >> 6) & 0x7;
-                let sr1 = Register::from_u16(raw_sr1).unwrap();
                 let imm_flag = (instruction >> 5) & 0x1;
+                let dr = Register::from_u16(raw_dr).unwrap();
+                let sr1 = Register::from_u16(raw_sr1).unwrap();
 
                 match imm_flag {
                     1 => {
@@ -84,7 +84,18 @@ fn main() {
             Opcode::LDR => {},
             Opcode::STR => {},
             Opcode::RTI => {},
-            Opcode::NOT => {},
+            Opcode::NOT => {
+                let raw_dr = (instruction >> 9) & 0x7;
+                let raw_sr = (instruction >> 6) & 0x7;
+                let dr = Register::from_u16(raw_dr).unwrap();
+                let sr = Register::from_u16(raw_sr).unwrap();
+
+                registers.write(
+                    dr,
+                    !registers.read(sr)
+                );
+                registers.update_flags(dr)
+            },
             Opcode::LDI => {
                 let raw_dr = (instruction >> 9) & 0x7;
                 let dr = Register::from_u16(raw_dr).unwrap();
