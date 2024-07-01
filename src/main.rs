@@ -128,7 +128,17 @@ fn main() {
                 );
                 registers.update_flags(dr);
             },
-            Opcode::STR => {},
+            Opcode::STR => {
+                let raw_sr = (instruction >> 9) & 0x7;
+                let raw_base_r = (instruction >> 6) & 0x7;
+                let offset = sign_extend(instruction & 0x3F, 6);
+                let sr = Register::from_u16(raw_sr).unwrap();
+                let base_r = Register::from_u16(raw_base_r).unwrap();
+                memory.write(
+                    registers.read(base_r) + offset,
+                    registers.read(sr)
+                )
+            },
             Opcode::RTI => {},
             Opcode::NOT => {
                 let raw_dr = (instruction >> 9) & 0x7;
