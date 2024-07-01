@@ -110,7 +110,14 @@ fn main() {
                 registers.update_flags(dr)
             },
             Opcode::STI => {},
-            Opcode::JMP => {},
+            Opcode::JMP => {
+                let raw_base_r = (instruction >> 6) & 0x7;
+                let base_r = Register::from_u16(raw_base_r).unwrap();
+                registers.write(
+                    Register::PC,
+                    registers.read(base_r)
+                )
+            },
             Opcode::RES => {},
             Opcode::LEA => {},
             Opcode::TRAP => {},
