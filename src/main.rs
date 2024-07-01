@@ -2,6 +2,7 @@ use crate::flag::ConditionFlag;
 use crate::memory::Memory;
 use crate::opcode::Opcode;
 use crate::register::{Register, Registers};
+use crate::trap::TrapCode;
 use crate::utils::sign_extend;
 
 mod memory;
@@ -9,6 +10,7 @@ mod register;
 mod opcode;
 mod flag;
 mod utils;
+mod trap;
 
 
 fn main() {
@@ -193,7 +195,22 @@ fn main() {
                 );
                 registers.update_flags(dr)
             },
-            Opcode::TRAP => {},
+            Opcode::TRAP => {
+                registers.write(
+                    Register::R7,
+                    registers.read(Register::PC)
+                );
+                let raw_trap_code = instruction & 0xFF;
+                let trap_code = TrapCode::from_u16(raw_trap_code).unwrap();
+                match trap_code {
+                    TrapCode::GETC => {},
+                    TrapCode::OUT => {},
+                    TrapCode::PUTS => {},
+                    TrapCode::IN => {},
+                    TrapCode::PUTSP => {},
+                    TrapCode::HALT => {},
+                }
+            },
         }
     }
 }
