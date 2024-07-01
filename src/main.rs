@@ -12,7 +12,7 @@ mod utils;
 
 
 fn main() {
-    let memory = Memory::new();
+    let mut memory = Memory::new();
     let mut registers = Registers::new();
     registers.write(Register::COND, ConditionFlag::ZRO as u16);
     registers.write(Register::PC, 0x3000u16);
@@ -67,7 +67,15 @@ fn main() {
                 );
                 registers.update_flags(dr)
             },
-            Opcode::ST => {},
+            Opcode::ST => {
+                let raw_sr = (instruction >> 9) & 0x7;
+                let pc_offset = sign_extend(instruction & 0x1FF, 9);
+                let sr = Register::from_u16(raw_sr).unwrap();
+                memory.write(
+                    registers.read(Register::PC) + pc_offset,
+                    registers.read(sr)
+                )
+            },
             Opcode::JSR => {
                 let long_flag = (instruction >> 11) & 1;
                 registers.write(Register::R7, registers.read(Register::PC));
@@ -135,15 +143,23 @@ fn main() {
             },
             Opcode::LDI => {
                 let raw_dr = (instruction >> 9) & 0x7;
-                let dr = Register::from_u16(raw_dr).unwrap();
                 let pc_offset = sign_extend(instruction_memory_index & 0x1FF, 9);
+                let dr = Register::from_u16(raw_dr).unwrap();
                 registers.write(
                     dr,
                     memory.read(memory.read(registers.read(Register::PC) + pc_offset)),
                 );
                 registers.update_flags(dr)
             },
-            Opcode::STI => {},
+            Opcode::STI => {
+                let raw_sr = (instruction >> 9) & 0x7;
+                let pc_offset = sign_extend(instruction & 0x1FF, 9);
+                let sr = Register::from_u16(raw_sr).unwrap();
+                memory.write(
+                    memory.read(registers.read(Register::PC) + pc_offset),
+                    registers.read(sr)
+                )
+            },
             Opcode::JMP => {
                 let raw_base_r = (instruction >> 6) & 0x7;
                 let base_r = Register::from_u16(raw_base_r).unwrap();
@@ -153,7 +169,16 @@ fn main() {
                 )
             },
             Opcode::RES => {},
-            Opcode::LEA => {},
+            Opcode::LEA => {
+                let raw_dr = (instruction >> 9) & 0x7;
+                let pc_offset = sign_extend(instruction & 0x1FF, 9);
+                let dr = Register::from_u16(raw_dr).unwrap();
+                registers.write(
+                    dr,
+                    registers.read(Register::PC) + pc_offset
+                );
+                registers.update_flags(dr)
+            },
             Opcode::TRAP => {},
         }
     }
