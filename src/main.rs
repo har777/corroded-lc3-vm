@@ -60,7 +60,24 @@ fn main() {
             },
             Opcode::LD => {},
             Opcode::ST => {},
-            Opcode::JSR => {},
+            Opcode::JSR => {
+                let long_flag = (instruction >> 11) & 1;
+                registers.write(Register::R7, registers.read(Register::PC));
+                if long_flag == 1 { /* JSR */
+                    let long_pc_offset = sign_extend(instruction & 0x7FF, 11);
+                    registers.write(
+                        Register::PC,
+                        registers.read(Register::PC) + long_pc_offset
+                    )
+                } else { /* JSRR */
+                    let raw_base_r = (instruction >> 6) & 0x7;
+                    let base_r = Register::from_u16(raw_base_r).unwrap();
+                    registers.write(
+                        Register::PC,
+                        registers.read(base_r)
+                    )
+                }
+            },
             Opcode::AND => {
                 let raw_dr = (instruction >> 9) & 0x7;
                 let raw_sr1 = (instruction >> 6) & 0x7;
