@@ -1,3 +1,5 @@
+use std::io;
+use std::io::{Read, Write};
 use crate::flag::ConditionFlag;
 use crate::memory::Memory;
 use crate::opcode::Opcode;
@@ -203,12 +205,61 @@ fn main() {
                 let raw_trap_code = instruction & 0xFF;
                 let trap_code = TrapCode::from_u16(raw_trap_code).unwrap();
                 match trap_code {
-                    TrapCode::GETC => {},
-                    TrapCode::OUT => {},
-                    TrapCode::PUTS => {},
-                    TrapCode::IN => {},
-                    TrapCode::PUTSP => {},
-                    TrapCode::HALT => {},
+                    TrapCode::GETC => {
+                        let mut input = [0; 1];
+                        io::stdin().read_exact(&mut input).unwrap();
+                        registers.write(Register::R0, input[0] as u16);
+                        registers.update_flags(Register::R0)
+                    },
+                    TrapCode::OUT => {
+                        let char_integer = registers.read(Register::R0);
+                        print!("{}", char_integer as u8 as char);
+                        io::stdout().flush().unwrap()
+                    },
+                    TrapCode::PUTS => {
+                        let mut char_mem_idx = registers.read(Register::R0);
+                        loop {
+                            let char_integer = memory.read(char_mem_idx);
+                            if char_integer == 0 {
+                                break
+                            }
+                            print!("{}", char_integer as u8 as char);
+                            char_mem_idx += 1;
+                        }
+                        io::stdout().flush().unwrap()
+                    },
+                    TrapCode::IN => {
+                        print!("Enter a character: ");
+                        io::stdout().flush().unwrap();
+                        let mut input = [0; 1];
+                        io::stdin().read_exact(&mut input).unwrap();
+                        print!("{}", input[0] as char);
+                        io::stdout().flush().unwrap();
+                        registers.write(Register::R0, input[0] as u16);
+                        registers.update_flags(Register::R0)
+                    },
+                    TrapCode::PUTSP => {
+                        let mut char_mem_idx = registers.read(Register::R0);
+                        loop {
+                            let char_integer = memory.read(char_mem_idx);
+                            if char_integer == 0 {
+                                break
+                            }
+                            let char_1_integer = char_integer & 0xFF;
+                            print!("{}", char_1_integer as u8 as char);
+                            let char_2_integer = char_integer >> 8;
+                            if char_2_integer != 0 {
+                                print!("{}", char_2_integer as u8 as char);
+                            }
+                            char_mem_idx += 1;
+                        }
+                        io::stdout().flush().unwrap()
+                    },
+                    TrapCode::HALT => {
+                        print!("HALT");
+                        io::stdout().flush().unwrap();
+                        break
+                    },
                 }
             },
         }
