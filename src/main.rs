@@ -139,7 +139,9 @@ fn main() {
                     registers.read(sr)
                 )
             },
-            Opcode::RTI => {},
+            Opcode::RTI => {
+                panic!("RTI is an unused OPCODE")
+            },
             Opcode::NOT => {
                 let raw_dr = (instruction >> 9) & 0x7;
                 let raw_sr = (instruction >> 6) & 0x7;
@@ -178,7 +180,9 @@ fn main() {
                     registers.read(base_r)
                 )
             },
-            Opcode::RES => {},
+            Opcode::RES => {
+                panic!("RES is an unused OPCODE")
+            },
             Opcode::LEA => {
                 let raw_dr = (instruction >> 9) & 0x7;
                 let pc_offset = sign_extend(instruction & 0x1FF, 9);
