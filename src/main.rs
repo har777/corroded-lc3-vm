@@ -41,7 +41,6 @@ fn main() {
                 let imm_flag = (instruction >> 5) & 0x1;
                 let dr = Register::from_u16(raw_dr).unwrap();
                 let sr1 = Register::from_u16(raw_sr1).unwrap();
-
                 if imm_flag == 1 {
                     let imm5 = sign_extend(instruction & 0x1F, 5);
                     registers.write(
@@ -58,7 +57,16 @@ fn main() {
                 }
                 registers.update_flags(dr)
             },
-            Opcode::LD => {},
+            Opcode::LD => {
+                let raw_dr = (instruction >> 9) & 0x7;
+                let pc_offset = sign_extend(instruction & 0x1FF, 9);
+                let dr = Register::from_u16(raw_dr).unwrap();
+                registers.write(
+                    dr,
+                    memory.read(registers.read(Register::PC) + pc_offset)
+                );
+                registers.update_flags(dr)
+            },
             Opcode::ST => {},
             Opcode::JSR => {
                 let long_flag = (instruction >> 11) & 1;
@@ -84,7 +92,6 @@ fn main() {
                 let imm_flag = (instruction >> 5) & 0x1;
                 let dr = Register::from_u16(raw_dr).unwrap();
                 let sr1 = Register::from_u16(raw_sr1).unwrap();
-
                 if imm_flag == 1 {
                     let imm5 = sign_extend(instruction & 0x1F, 5);
                     registers.write(
@@ -109,7 +116,6 @@ fn main() {
                 let raw_sr = (instruction >> 6) & 0x7;
                 let dr = Register::from_u16(raw_dr).unwrap();
                 let sr = Register::from_u16(raw_sr).unwrap();
-
                 registers.write(
                     dr,
                     !registers.read(sr)
