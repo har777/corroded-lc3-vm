@@ -25,7 +25,16 @@ fn main() {
         let raw_opcode = instruction >> 12;
         let opcode = Opcode::from_u16(raw_opcode).unwrap();
         match opcode {
-            Opcode::BR => {},
+            Opcode::BR => {
+                let pc_offset = sign_extend(instruction & 0x1FF, 9);
+                let cond_flag = (instruction >> 9) & 0x7;
+                if cond_flag & registers.read(Register::COND) == 1 {
+                    registers.write(
+                        Register::PC,
+                        registers.read(Register::PC) + pc_offset
+                    )
+                }
+            },
             Opcode::ADD => {
                 let raw_dr = (instruction >> 9) & 0x7;
                 let raw_sr1 = (instruction >> 6) & 0x7;
@@ -33,22 +42,19 @@ fn main() {
                 let dr = Register::from_u16(raw_dr).unwrap();
                 let sr1 = Register::from_u16(raw_sr1).unwrap();
 
-                match imm_flag {
-                    1 => {
-                        let imm5 = sign_extend(instruction & 0x1F, 5);
-                        registers.write(
-                            dr,
-                            registers.read(sr1) + imm5
-                        )
-                    }
-                    _ => {
-                        let raw_sr2 = instruction & 0x7;
-                        let sr2 = Register::from_u16(raw_sr2).unwrap();
-                        registers.write(
-                            dr,
-                            registers.read(sr1) + registers.read(sr2)
-                        )
-                    }
+                if imm_flag == 1 {
+                    let imm5 = sign_extend(instruction & 0x1F, 5);
+                    registers.write(
+                        dr,
+                        registers.read(sr1) + imm5
+                    )
+                } else {
+                    let raw_sr2 = instruction & 0x7;
+                    let sr2 = Register::from_u16(raw_sr2).unwrap();
+                    registers.write(
+                        dr,
+                        registers.read(sr1) + registers.read(sr2)
+                    )
                 }
                 registers.update_flags(dr)
             },
@@ -62,22 +68,19 @@ fn main() {
                 let dr = Register::from_u16(raw_dr).unwrap();
                 let sr1 = Register::from_u16(raw_sr1).unwrap();
 
-                match imm_flag {
-                    1 => {
-                        let imm5 = sign_extend(instruction & 0x1F, 5);
-                        registers.write(
-                            dr,
-                            registers.read(sr1) & imm5
-                        )
-                    }
-                    _ => {
-                        let raw_sr2 = instruction & 0x7;
-                        let sr2 = Register::from_u16(raw_sr2).unwrap();
-                        registers.write(
-                            dr,
-                            registers.read(sr1) & registers.read(sr2)
-                        )
-                    }
+                if imm_flag == 1 {
+                    let imm5 = sign_extend(instruction & 0x1F, 5);
+                    registers.write(
+                        dr,
+                        registers.read(sr1) & imm5
+                    )
+                } else {
+                    let raw_sr2 = instruction & 0x7;
+                    let sr2 = Register::from_u16(raw_sr2).unwrap();
+                    registers.write(
+                        dr,
+                        registers.read(sr1) & registers.read(sr2)
+                    )
                 }
                 registers.update_flags(dr);
             },
