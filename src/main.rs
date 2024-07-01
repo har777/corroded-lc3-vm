@@ -108,7 +108,18 @@ fn main() {
                 }
                 registers.update_flags(dr);
             },
-            Opcode::LDR => {},
+            Opcode::LDR => {
+                let raw_dr = (instruction >> 9) & 0x7;
+                let raw_base_r = (instruction >> 6) & 0x7;
+                let offset = sign_extend(instruction & 0x3F, 6);
+                let dr = Register::from_u16(raw_dr).unwrap();
+                let base_r = Register::from_u16(raw_base_r).unwrap();
+                registers.write(
+                    dr,
+                    memory.read(registers.read(base_r) + offset)
+                );
+                registers.update_flags(dr);
+            },
             Opcode::STR => {},
             Opcode::RTI => {},
             Opcode::NOT => {
