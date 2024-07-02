@@ -1,11 +1,13 @@
+const MEMORY_MAX: usize = 65536;
+
 pub struct Memory {
-    data: [u16; 65_536],
+    data: [u16; MEMORY_MAX],
 }
 
 impl Memory {
     pub fn new() -> Self {
         Memory {
-            data: [0; 65_536],
+            data: [0; MEMORY_MAX],
         }
     }
 
