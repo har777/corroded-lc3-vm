@@ -1,11 +1,11 @@
 use std::io;
-use std::io::{Read, Write};
+use std::io::{Write};
 use crate::flag::ConditionFlag;
 use crate::memory::Memory;
 use crate::opcode::Opcode;
 use crate::register::{Register, Registers};
 use crate::trap::TrapCode;
-use crate::utils::sign_extend;
+use crate::utils::{get_char_byte, sign_extend};
 
 pub struct CPU {
     memory: Memory,
@@ -163,9 +163,10 @@ impl CPU {
                     let raw_dr = (instruction >> 9) & 0x7;
                     let pc_offset = sign_extend(instruction & 0x1FF, 9);
                     let dr = Register::from_u16(raw_dr).unwrap();
+                    let value_index = self.memory.read(self.registers.read(Register::PC) + pc_offset);
                     self.registers.write(
                         dr,
-                        self.memory.read(self.memory.read(self.registers.read(Register::PC) + pc_offset)),
+                        self.memory.read(value_index),
                     );
                     self.registers.update_flags(dr)
                 },
@@ -173,8 +174,9 @@ impl CPU {
                     let raw_sr = (instruction >> 9) & 0x7;
                     let pc_offset = sign_extend(instruction & 0x1FF, 9);
                     let sr = Register::from_u16(raw_sr).unwrap();
+                    let key = self.memory.read(self.registers.read(Register::PC) + pc_offset); 
                     self.memory.write(
-                        self.memory.read(self.registers.read(Register::PC) + pc_offset),
+                        key,
                         self.registers.read(sr)
                     )
                 },
@@ -208,9 +210,7 @@ impl CPU {
                     let trap_code = TrapCode::from_u16(raw_trap_code).unwrap();
                     match trap_code {
                         TrapCode::GETC => {
-                            let mut input = [0; 1];
-                            io::stdin().read_exact(&mut input).unwrap();
-                            self.registers.write(Register::R0, input[0] as u16);
+                            self.registers.write(Register::R0, get_char_byte().unwrap() as u16);
                             self.registers.update_flags(Register::R0)
                         },
                         TrapCode::OUT => {
@@ -233,11 +233,10 @@ impl CPU {
                         TrapCode::IN => {
                             print!("Enter a character: ");
                             io::stdout().flush().unwrap();
-                            let mut input = [0; 1];
-                            io::stdin().read_exact(&mut input).unwrap();
-                            print!("{}", input[0] as char);
+                            let char_byte = get_char_byte().unwrap(); 
+                            print!("{}", char_byte as char);
                             io::stdout().flush().unwrap();
-                            self.registers.write(Register::R0, input[0] as u16);
+                            self.registers.write(Register::R0, char_byte as u16);
                             self.registers.update_flags(Register::R0)
                         },
                         TrapCode::PUTSP => {
